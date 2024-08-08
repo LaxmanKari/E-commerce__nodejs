@@ -99,7 +99,11 @@ router.get("/cart", async (req, res, next) => {
     if (!populateUserCartItems) {
       return res.status(404).json({ message: "No Products, cart empty" });
     }
-    res.json(populateUserCartItems.userCart);
+    if(populateUserCartItems.userCart.length === 0){
+      return res.status(404).json({ message: "No Products, wishlist empty" });
+    } else {
+      res.json(populateUserCartItems.userCart);
+    }
   } catch (error) {
     res.status(503).json({ message: "Error fetching cart items", error });
   }
@@ -138,6 +142,66 @@ router.post("/cart/add", async (req, res, next) => {
     res.status(200).json({ message: "Product added to cart successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error adding product to cart", error });
+  }
+});
+
+router.get("/wishlist", async (req, res, next) => {
+  try {
+    const loggedInUserEmail = req.session.user.userEmail;
+    if (!loggedInUserEmail) {
+      res.status(401).json({ message: "Please login" });
+    }
+
+    const populateUserWishListItems = await User.findOne({ userEmail: loggedInUserEmail })?.populate(
+      "userWishList"
+    );
+    if (!populateUserWishListItems) {
+      return res.status(404).json({ message: "No Products, wishlist empty" });
+    } 
+    if(populateUserWishListItems.userWishList.length === 0){
+      return res.status(404).json({ message: "No Products, wishlist empty" });
+    } else {
+      res.json(populateUserWishListItems.userWishList);
+    }
+   
+  } catch (error) {
+    res.status(503).json({ message: "Error fetching cart items", error });
+  }
+});
+
+router.post("/wishlist/add", async (req, res, next) => {
+  try {
+    const itemId = req.body.itemId;
+    const loggedInUserEmail = req.session.user.userEmail;
+
+    if (!loggedInUserEmail) {
+      return res.status(401).json({ message: "Please login" });
+    }
+
+    if (!itemId) {
+      return res.status(400).json({
+        message: "Please provide the product id in order to add to cart",
+      });
+    }
+    const product = await Product.findById(itemId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const user = await User.findOne({ userEmail: loggedInUserEmail });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.userWishList.includes(itemId)) {
+      return res.status(400).json({ message: "Product already in the wishlist" });
+    }
+
+    user.userWishList.push(itemId);
+    await user.save();
+    res.status(200).json({ message: "Product added to wishlist successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding product to wishlist", error });
   }
 });
 
