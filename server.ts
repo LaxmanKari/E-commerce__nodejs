@@ -1,9 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-
+import mongoose from "mongoose";
+import Database from "./database";
 const express = require("express");
+
+const db = new Database();
 
 const app = express();
 const PORT = 3000;
+
 
 // Parse JSON payloads
 app.use(express.json());
