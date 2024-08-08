@@ -1,0 +1,8 @@
+exports.requireLogin = (req, res, next) => {
+  if (req.session && req.session.user) {
+    console.log("middleware :", req.session.user);
+    return next(); // carry on and perform the next in the request-response cycle
+  } else {
+    return res.status(401).json({ message: "Please login!" });
+  }
+};
