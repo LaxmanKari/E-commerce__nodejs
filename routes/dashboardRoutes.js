@@ -7,7 +7,21 @@ const Product = require("../schemas/ProductSchema");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-router.get("/", async (req, res, next) => {});
+router.get("/", async (req, res, next) => {
+  try {
+    const loggedInUserEmail = req.session.user.userEmail;
+    if (!loggedInUserEmail) {
+      console.log(req.session.user.userEmail);
+      res.status.send("User not logged In");
+    }
+    const products = await Product.find({
+      productOwner: { $ne: loggedInUserEmail },
+    });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching products", error });
+  }
+});
 
 router.post("/add", async (req, res, next) => {
   var payload = req.body;
@@ -44,11 +58,11 @@ router.post("/add", async (req, res, next) => {
       console.log(error);
       res.status(500).json({ message: "Error adding product to db", error });
     }
-  } 
-  else {
-    res.status(400).json({ message: "Make sure all the details are provided correctly"});
+  } else {
+    res
+      .status(400)
+      .json({ message: "Make sure all the details are provided correctly" });
   }
 });
 
 module.exports = router;
-
