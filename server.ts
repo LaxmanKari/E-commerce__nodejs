@@ -27,9 +27,11 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 // Routes
 const loginRoute = require('./routes/loginRoutes'); 
 const registerRoute = require('./routes/registerRoutes'); 
+const dashboardRoute = require('./routes/dashboardRoutes.js')
 
 app.use("/login", loginRoute); 
 app.use("/register", registerRoute); 
+app.use("/dashboard", dashboardRoute);
 
 app.listen(PORT, (error: any) => {
   if (!error)
