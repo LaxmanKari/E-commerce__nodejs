@@ -2,8 +2,8 @@ const express = require("express");
 const app = express();
 const router = express.Router();
 const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
 const Product = require("../schemas/ProductSchema");
+const User = require("../schemas/UserSchema");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -83,6 +83,61 @@ router.post("/add", async (req, res, next) => {
     res
       .status(400)
       .json({ message: "Make sure all the details are provided correctly" });
+  }
+});
+
+router.get("/cart", async (req, res, next) => {
+  try {
+    const loggedInUserEmail = req.session.user.userEmail;
+    if (!loggedInUserEmail) {
+      res.status(401).json({ message: "Please login" });
+    }
+
+    const populateUserCartItems = await User.findOne({ userEmail: loggedInUserEmail })?.populate(
+      "userCart"
+    );
+    if (!populateUserCartItems) {
+      return res.status(404).json({ message: "No Products, cart empty" });
+    }
+    res.json(populateUserCartItems.userCart);
+  } catch (error) {
+    res.status(503).json({ message: "Error fetching cart items", error });
+  }
+});
+
+router.post("/cart/add", async (req, res, next) => {
+  try {
+    const itemId = req.body.itemId;
+    const loggedInUserEmail = req.session.user.userEmail;
+
+    if (!loggedInUserEmail) {
+      return res.status(401).json({ message: "Please login" });
+    }
+
+    if (!itemId) {
+      return res.status(400).json({
+        message: "Please provide the product id in order to add to cart",
+      });
+    }
+    const product = await Product.findById(itemId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const user = await User.findOne({ userEmail: loggedInUserEmail });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.userCart.includes(itemId)) {
+      return res.status(400).json({ message: "Product already in the cart" });
+    }
+
+    user.userCart.push(itemId);
+    await user.save();
+    res.status(200).json({ message: "Product added to cart successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding product to cart", error });
   }
 });
 
