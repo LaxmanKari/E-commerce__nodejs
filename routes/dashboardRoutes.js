@@ -93,13 +93,13 @@ router.get("/cart", async (req, res, next) => {
       res.status(401).json({ message: "Please login" });
     }
 
-    const populateUserCartItems = await User.findOne({ userEmail: loggedInUserEmail })?.populate(
-      "userCart"
-    );
+    const populateUserCartItems = await User.findOne({
+      userEmail: loggedInUserEmail,
+    })?.populate("userCart");
     if (!populateUserCartItems) {
       return res.status(404).json({ message: "No Products, cart empty" });
     }
-    if(populateUserCartItems.userCart.length === 0){
+    if (populateUserCartItems.userCart.length === 0) {
       return res.status(404).json({ message: "No Products, wishlist empty" });
     } else {
       res.json(populateUserCartItems.userCart);
@@ -152,18 +152,17 @@ router.get("/wishlist", async (req, res, next) => {
       res.status(401).json({ message: "Please login" });
     }
 
-    const populateUserWishListItems = await User.findOne({ userEmail: loggedInUserEmail })?.populate(
-      "userWishList"
-    );
+    const populateUserWishListItems = await User.findOne({
+      userEmail: loggedInUserEmail,
+    })?.populate("userWishList");
     if (!populateUserWishListItems) {
       return res.status(404).json({ message: "No Products, wishlist empty" });
-    } 
-    if(populateUserWishListItems.userWishList.length === 0){
+    }
+    if (populateUserWishListItems.userWishList.length === 0) {
       return res.status(404).json({ message: "No Products, wishlist empty" });
     } else {
       res.json(populateUserWishListItems.userWishList);
     }
-   
   } catch (error) {
     res.status(503).json({ message: "Error fetching cart items", error });
   }
@@ -194,14 +193,44 @@ router.post("/wishlist/add", async (req, res, next) => {
     }
 
     if (user.userWishList.includes(itemId)) {
-      return res.status(400).json({ message: "Product already in the wishlist" });
+      return res
+        .status(400)
+        .json({ message: "Product already in the wishlist" });
     }
 
     user.userWishList.push(itemId);
     await user.save();
     res.status(200).json({ message: "Product added to wishlist successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error adding product to wishlist", error });
+    res
+      .status(500)
+      .json({ message: "Error adding product to wishlist", error });
+  }
+});
+
+router.get("/inventory", async (req, res, next) => {
+  try {
+    const loggedInUserEmail = req.session.user.userEmail;
+    if (!loggedInUserEmail) {
+      res.status(401).json({ message: "Please login" });
+    }
+
+    const userInventoryItems = await Product.find({
+      productOwner: loggedInUserEmail,
+    });
+    if (!userInventoryItems) {
+      return res.status(404).json({ message: "No Products" });
+    }
+    if (userInventoryItems.length === 0) {
+      return res.status(404).json({
+        message:
+          "No Products, inventory is empty, please add your products for sale",
+      });
+    } else {
+      res.json(userInventoryItems);
+    }
+  } catch (error) {
+    res.status(503).json({ message: "Error fetching inventory items", error });
   }
 });
 
