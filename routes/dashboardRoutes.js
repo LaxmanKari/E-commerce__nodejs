@@ -11,15 +11,36 @@ router.get("/", async (req, res, next) => {
   try {
     const loggedInUserEmail = req.session.user.userEmail;
     if (!loggedInUserEmail) {
-      console.log(req.session.user.userEmail);
-      res.status.send("User not logged In");
+      res.status(401).send("User not logged In");
     }
     const products = await Product.find({
       productOwner: { $ne: loggedInUserEmail },
     });
     res.json(products);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching products", error });
+    res.status(503).json({ message: "Error fetching products", error });
+  }
+});
+
+router.get("/product", async (req, res, next) => {
+  try {
+    const productName = req.query.productName;
+    const loggedInUserEmail = req.session.user.userEmail;
+    if (!loggedInUserEmail) {
+      res.status(500).send("Bad Request");
+    }
+    const query = { productOwner: { $ne: loggedInUserEmail } };
+    if (productName) {
+      query.productName = { $regex: new RegExp(productName, "i") };
+    }
+    const products = await Product.find(query);
+    if (products.length === 0) {
+      res.json({ message: "Oops, No related products found" });
+    } else {
+      res.json(products);
+    }
+  } catch (error) {
+    res.status(503).json({ message: "Error fetching products", error });
   }
 });
 
