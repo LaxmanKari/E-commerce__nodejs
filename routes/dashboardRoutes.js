@@ -46,9 +46,9 @@ router.get("/product", async (req, res, next) => {
 
 router.post("/add", async (req, res, next) => {
   var payload = req.body;
-
+  const loggedInUserEmail = req.session.user.userEmail;
   const productName = req.body.productName;
-  const productOwner = req.body.productOwner;
+  const productOwner = loggedInUserEmail;
   const productDescription = req.body.productDescription;
   const productPrice = req.body.productPrice;
   const productCondition = req.body.productCondition;
@@ -229,6 +229,69 @@ router.get("/inventory", async (req, res, next) => {
     } else {
       res.json(userInventoryItems);
     }
+  } catch (error) {
+    res.status(503).json({ message: "Error fetching inventory items", error });
+  }
+});
+
+router.delete("/inventory/product", async (req, res, next) => {
+  try {
+    const productId = req.query.productId;
+    const loggedInUserEmail = req.session.user.userEmail;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    //Ensure whether user owns this product
+    if (product.productOwner !== loggedInUserEmail) {
+      return res.statusMessage(403).json({
+        message:
+          "Yo do not have permission to delete this product, product is owned by :",
+        product,
+      });
+    }
+
+    await Product.findByIdAndDelete(productId);
+
+    res.status(200).json({ message: "Product deleted successfully", product });
+  } catch (error) {
+    res.status(503).json({ message: "Error fetching inventory items", error });
+  }
+});
+
+router.put("/inventory/update", async (req, res, next) => {
+  try {
+    const productId = req.query.productId;
+    const updatedProduct = req.body;
+    const loggedInUserEmail = req.session.user.userEmail;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    //Ensure whether user owns this product
+    if (product.productOwner !== loggedInUserEmail) {
+      return res.status(200).json({
+        message:
+          "Yo do not have permission to delete this product, product is owned by :",
+      });
+    }
+
+    const newUpdatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      updatedProduct,
+      {
+        new: true,
+        runVlidators: true,
+      }
+    );
+
+    if (!newUpdatedProduct) {
+      return res.status(500).json({ message: "Error updating product" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Product updated successfully", newUpdatedProduct });
   } catch (error) {
     res.status(503).json({ message: "Error fetching inventory items", error });
   }
