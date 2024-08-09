@@ -1,16 +1,15 @@
-const mongoose = require('mongoose'); 
-const Schema = mongoose.Schema; 
+import mongoose, { Schema } from "mongoose";
 
-// interface IProduct extends Document {
-//   productId: string;
-//   productName: string;
-//   productOwner: string;
-//   productDescription: string;
-//   productPrice: number;
-//   productImage?: string;
-//   productCondition: string;
-//   productCategory: string;
-// }
+interface IProduct extends Document {
+  productId: string;
+  productName: string;
+  productOwner: string;
+  productDescription: string;
+  productPrice: number;
+  productImage?: string;
+  productCondition: string;
+  productCategory: string;
+}
 
 const ProductSchema = new Schema(
   {

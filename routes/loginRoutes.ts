@@ -1,18 +1,27 @@
+import { NextFunction } from "express";
+import { IUser } from "../schemas/UserSchema";
+
 const express = require("express");
 const app = express();
 const router = express.Router();
 const bodyParser = require("body-parser");
-const User = require("../schemas/UserSchema");
+const {User} = require("../schemas/UserSchema");
 const bcrypt = require("bcrypt");
+
+declare module 'express-session' {
+  interface SessionData {
+    user: typeof User
+  }
+}
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-router.post("/", async (req, res, next) => {
+router.post("/", async (req: any, res: any, next: NextFunction) => {
   var payload = req.body;
 
-  if (req.body.userEmail && req.body.userPassword) {
+  if (req.body?.userEmail && req.body.userPassword) {
     var user = await User.findOne({ userEmail: req.body.userEmail }).catch(
-      (error) => {
+      (error: any) => {
         console.log(error);
 
         payload.errorMessage = "Something went wrong";

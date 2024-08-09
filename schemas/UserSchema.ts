@@ -1,15 +1,15 @@
-const mongoose = require('mongoose'); 
+import mongoose from 'mongoose'; 
 const Schema = mongoose.Schema; 
 
-// interface User {
-//   userName: string;
-//   userEmail: string;
-//   userPasswordHash: string;
-//   userProfilePicture?: string;
-//   userProducts?: mongoose.Schema.Types.ObjectId[];
-//   userCart?: mongoose.Schema.Types.ObjectId[];
-//   userProductWishList?: mongoose.Schema.Types.ObjectId;
-// }
+interface IUser {
+  userName: string;
+  userEmail: string;
+  userPasswordHash: string;
+  userProfilePicture?: string;
+  userProducts?: mongoose.Schema.Types.ObjectId[];
+  userCart?: mongoose.Schema.Types.ObjectId[];
+  userProductWishList?: mongoose.Schema.Types.ObjectId;
+}
 
 const UserSchema = new Schema(
   {
@@ -25,4 +25,6 @@ const UserSchema = new Schema(
 );
 
 var User = mongoose.model('User', UserSchema); 
-module.exports = User; 
+// module.exports = User; 
+
+export {User, IUser}

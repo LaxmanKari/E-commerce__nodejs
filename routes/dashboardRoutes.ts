@@ -1,13 +1,16 @@
+import { NextFunction } from "express";
+
 const express = require("express");
 const app = express();
 const router = express.Router();
 const bodyParser = require("body-parser");
 const Product = require("../schemas/ProductSchema");
-const User = require("../schemas/UserSchema");
+const { User } = require("../schemas/UserSchema");
+import { IproductSearchByName } from "../types/product.types";
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-router.get("/", async (req, res, next) => {
+router.get("/", async (req: any, res: any, next: NextFunction) => {
   try {
     const loggedInUserEmail = req.session.user.userEmail;
     if (!loggedInUserEmail) {
@@ -22,16 +25,20 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/product", async (req, res, next) => {
+router.get("/product", async (req: any, res: any, next: NextFunction) => {
   try {
     const productName = req.query.productName;
     const loggedInUserEmail = req.session.user.userEmail;
     if (!loggedInUserEmail) {
       res.status(500).send("Bad Request");
     }
-    const query = { productOwner: { $ne: loggedInUserEmail } };
+    const query: IproductSearchByName = {
+      productOwner: { $ne: loggedInUserEmail },
+    } as unknown as IproductSearchByName;
     if (productName) {
-      query.productName = { $regex: new RegExp(productName, "i") };
+      query.productName = {
+        $regex: new RegExp(productName, "i"),
+      } as unknown as string;
     }
     const products = await Product.find(query);
     if (products.length === 0) {
@@ -44,7 +51,7 @@ router.get("/product", async (req, res, next) => {
   }
 });
 
-router.post("/add", async (req, res, next) => {
+router.post("/add", async (req: any, res: any, next: NextFunction) => {
   var payload = req.body;
   const loggedInUserEmail = req.session.user.userEmail;
   const productName = req.body.productName;
@@ -86,7 +93,7 @@ router.post("/add", async (req, res, next) => {
   }
 });
 
-router.get("/cart", async (req, res, next) => {
+router.get("/cart", async (req: any, res: any, next: NextFunction) => {
   try {
     const loggedInUserEmail = req.session.user.userEmail;
     if (!loggedInUserEmail) {
@@ -109,7 +116,7 @@ router.get("/cart", async (req, res, next) => {
   }
 });
 
-router.post("/cart/add", async (req, res, next) => {
+router.post("/cart/add", async (req: any, res: any, next: NextFunction) => {
   try {
     const itemId = req.body.itemId;
     const loggedInUserEmail = req.session.user.userEmail;
@@ -145,7 +152,7 @@ router.post("/cart/add", async (req, res, next) => {
   }
 });
 
-router.get("/wishlist", async (req, res, next) => {
+router.get("/wishlist", async (req: any, res: any, next: NextFunction) => {
   try {
     const loggedInUserEmail = req.session.user.userEmail;
     if (!loggedInUserEmail) {
@@ -168,7 +175,7 @@ router.get("/wishlist", async (req, res, next) => {
   }
 });
 
-router.post("/wishlist/add", async (req, res, next) => {
+router.post("/wishlist/add", async (req: any, res: any, next: NextFunction) => {
   try {
     const itemId = req.body.itemId;
     const loggedInUserEmail = req.session.user.userEmail;
@@ -208,7 +215,7 @@ router.post("/wishlist/add", async (req, res, next) => {
   }
 });
 
-router.get("/inventory", async (req, res, next) => {
+router.get("/inventory", async (req: any, res: any, next: NextFunction) => {
   try {
     const loggedInUserEmail = req.session.user.userEmail;
     if (!loggedInUserEmail) {
@@ -234,7 +241,7 @@ router.get("/inventory", async (req, res, next) => {
   }
 });
 
-router.delete("/inventory/product", async (req, res, next) => {
+router.delete("/inventory/product", async (req: any, res: any, next: NextFunction) => {
   try {
     const productId = req.query.productId;
     const loggedInUserEmail = req.session.user.userEmail;
@@ -259,7 +266,7 @@ router.delete("/inventory/product", async (req, res, next) => {
   }
 });
 
-router.put("/inventory/update", async (req, res, next) => {
+router.put("/inventory/update", async (req: any, res: any, next: NextFunction) => {
   try {
     const productId = req.query.productId;
     const updatedProduct = req.body;
