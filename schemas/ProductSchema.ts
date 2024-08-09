@@ -20,8 +20,8 @@ const ProductSchema = new Schema(
       required: true,
       trim: true,
     },
-    productPrice: { type: Number, required: true},
-    productImage: { type: String},
+    productPrice: { type: Number, required: true },
+    productImage: { type: String },
     productCondition: { type: String, required: true },
     productCategory: { type: String, required: true },
   },
@@ -29,4 +29,4 @@ const ProductSchema = new Schema(
 );
 
 var Product = mongoose.model("Product", ProductSchema);
-module.exports = Product;
+export { Product, IProduct };

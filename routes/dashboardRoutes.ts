@@ -4,7 +4,7 @@ const express = require("express");
 const app = express();
 const router = express.Router();
 const bodyParser = require("body-parser");
-const Product = require("../schemas/ProductSchema");
+const { Product } = require("../schemas/ProductSchema");
 const { User } = require("../schemas/UserSchema");
 import { IproductSearchByName } from "../types/product.types";
 
@@ -46,6 +46,28 @@ router.get("/product", async (req: any, res: any, next: NextFunction) => {
     } else {
       res.json(products);
     }
+  } catch (error) {
+    res.status(503).json({ message: "Error fetching products", error });
+  }
+});
+
+router.get("/product/filter", async (req: any, res: any, next: NextFunction) => {
+  try {
+    const category = req.query.productCategory;
+    const loggedInUserEmail = req.session.user.userEmail;
+    if (!loggedInUserEmail) {
+      res.status(401).send("User not logged In");
+    }
+
+    if (category) {
+      const products = await Product.find({productCategory: category});
+      if (products.length === 0) {
+        res.json({ message: "Oops, No related products found with this category" });
+      } else {
+        return res.json(products);
+      }
+    }
+     res.status(400).json({message: "Please send valid category data"});
   } catch (error) {
     res.status(503).json({ message: "Error fetching products", error });
   }
