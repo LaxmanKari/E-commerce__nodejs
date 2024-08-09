@@ -241,66 +241,108 @@ router.get("/inventory", async (req: any, res: any, next: NextFunction) => {
   }
 });
 
-router.delete("/inventory/product", async (req: any, res: any, next: NextFunction) => {
-  try {
-    const productId = req.query.productId;
-    const loggedInUserEmail = req.session.user.userEmail;
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-    //Ensure whether user owns this product
-    if (product.productOwner !== loggedInUserEmail) {
-      return res.statusMessage(403).json({
-        message:
-          "Yo do not have permission to delete this product, product is owned by :",
-        product,
-      });
-    }
-
-    await Product.findByIdAndDelete(productId);
-
-    res.status(200).json({ message: "Product deleted successfully", product });
-  } catch (error) {
-    res.status(503).json({ message: "Error fetching inventory items", error });
-  }
-});
-
-router.put("/inventory/update", async (req: any, res: any, next: NextFunction) => {
-  try {
-    const productId = req.query.productId;
-    const updatedProduct = req.body;
-    const loggedInUserEmail = req.session.user.userEmail;
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-    //Ensure whether user owns this product
-    if (product.productOwner !== loggedInUserEmail) {
-      return res.status(200).json({
-        message:
-          "Yo do not have permission to delete this product, product is owned by :",
-      });
-    }
-
-    const newUpdatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      updatedProduct,
-      {
-        new: true,
-        runVlidators: true,
+router.delete(
+  "/inventory/product",
+  async (req: any, res: any, next: NextFunction) => {
+    try {
+      const productId = req.query.productId;
+      const loggedInUserEmail = req.session.user.userEmail;
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
       }
-    );
+      //Ensure whether user owns this product
+      if (product.productOwner !== loggedInUserEmail) {
+        return res.statusMessage(403).json({
+          message:
+            "Yo do not have permission to delete this product, product is owned by :",
+          product,
+        });
+      }
 
-    if (!newUpdatedProduct) {
-      return res.status(500).json({ message: "Error updating product" });
+      await Product.findByIdAndDelete(productId);
+
+      res
+        .status(200)
+        .json({ message: "Product deleted successfully", product });
+    } catch (error) {
+      res
+        .status(503)
+        .json({ message: "Error fetching inventory items", error });
+    }
+  }
+);
+
+router.put(
+  "/inventory/update",
+  async (req: any, res: any, next: NextFunction) => {
+    try {
+      const productId = req.query.productId;
+      const updatedProduct = req.body;
+      const loggedInUserEmail = req.session.user.userEmail;
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      //Ensure whether user owns this product
+      if (product.productOwner !== loggedInUserEmail) {
+        return res.status(200).json({
+          message:
+            "Yo do not have permission to delete this product, product is owned by :",
+        });
+      }
+
+      const newUpdatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        updatedProduct,
+        {
+          new: true,
+          runVlidators: true,
+        }
+      );
+
+      if (!newUpdatedProduct) {
+        return res.status(500).json({ message: "Error updating product" });
+      }
+
+      res
+        .status(200)
+        .json({ message: "Product updated successfully", newUpdatedProduct });
+    } catch (error) {
+      res
+        .status(503)
+        .json({ message: "Error fetching inventory items", error });
+    }
+  }
+);
+
+router.post("/checkout", async (req: any, res: any, next: NextFunction) => {
+  try {
+    const loggedInUserEmail = req.session.user.userEmail;
+    if (!loggedInUserEmail) {
+      res.status(401).json({ message: "Please login" });
     }
 
-    res
-      .status(200)
-      .json({ message: "Product updated successfully", newUpdatedProduct });
+    const populateUserCartItems = await User.findOne({
+      userEmail: loggedInUserEmail,
+    })?.populate("userCart");
+    if (!populateUserCartItems) {
+      return res.status(404).json({ message: "No Products, cart empty" });
+    }
+    if (populateUserCartItems.userCart.length === 0) {
+      return res.status(404).json({ message: "No Products, empty" });
+    } else {
+      let totalCost = 0;
+      const size = populateUserCartItems.userCart.length;
+      for (let i = 0; i < size; i++) {
+        totalCost += populateUserCartItems.userCart[i].productPrice;
+      }
+      res.json({
+        message: `Total price is : , ${totalCost}, Payment transaction initiating`,
+      });
+    }
   } catch (error) {
-    res.status(503).json({ message: "Error fetching inventory items", error });
+    res.status(503).json({ message: "Error fetching cart items", error });
   }
 });
 
